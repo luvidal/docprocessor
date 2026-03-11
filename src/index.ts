@@ -5,7 +5,7 @@ export { configure } from './config'
 export type { DocProcessorLogger } from './config'
 
 // OCR / Extraction
-export { Doc2Fields, detectCedulaSide, extractPdfPageAsImage } from './ocr'
+export { Doc2Fields, detectCedulaSide, extractPdfPageAsImage, getPromptVersion, buildCacheKey } from './ocr'
 
 // Composite cedula detection
 export { detectAndSplitCompositeCedula } from './cedula'

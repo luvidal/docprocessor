@@ -24,7 +24,36 @@ import { PDFDocument } from 'pdf-lib'
 import { detectAndCropFace } from './facedetect'
 import { cropCardWithGemini } from './faceextract'
 import sharp from 'sharp'
+import { createHash } from 'crypto'
 import type { ModelArg, ExtractionResult } from './types'
+
+// ─── Cache Helpers ───────────────────────────────────────────────────────────
+
+// Bump this string whenever prompt templates change (classifyDocument, classifyAndExtractImage, extractFields)
+const PROMPT_TEMPLATE_VERSION = 'v1'
+
+/**
+ * Returns a short hash that changes when doctypes schema or prompt templates change.
+ * Used as part of the AI cache key.
+ */
+export function getPromptVersion(): string {
+    return createHash('sha256')
+        .update(JSON.stringify(getDoctypes()))
+        .update(PROMPT_TEMPLATE_VERSION)
+        .digest('hex')
+        .slice(0, 12)
+}
+
+/**
+ * Build a cache key from the three inputs that determine AI output:
+ * file content (hash), model, and prompt version.
+ */
+export function buildCacheKey(fileHash: string, model: string, promptVersion: string): string {
+    return createHash('sha256')
+        .update(fileHash + model + promptVersion)
+        .digest('hex')
+        .slice(0, 32)
+}
 
 // Lazy-load pdf-to-png-converter to avoid loading native canvas at startup
 let pdfToPngModule: typeof import('pdf-to-png-converter') | null = null

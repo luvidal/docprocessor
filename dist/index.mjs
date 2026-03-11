@@ -1,6 +1,7 @@
 import smartcrop from 'smartcrop-sharp';
 import sharp3 from 'sharp';
 import { PDFDocument } from 'pdf-lib';
+import { createHash } from 'crypto';
 
 var __defProp = Object.defineProperty;
 var __getOwnPropNames = Object.getOwnPropertyNames;
@@ -1679,11 +1680,19 @@ var init_faceextract = __esm({
 var ocr_exports = {};
 __export(ocr_exports, {
   Doc2Fields: () => Doc2Fields,
+  buildCacheKey: () => buildCacheKey,
   detectCedulaSide: () => detectCedulaSide,
   extractPdfPageAsImage: () => extractPdfPageAsImage,
+  getPromptVersion: () => getPromptVersion,
   normalizeDoc: () => normalizeDoc,
   parseRawDocs: () => parseRawDocs
 });
+function getPromptVersion() {
+  return createHash("sha256").update(JSON.stringify(getDoctypes())).update(PROMPT_TEMPLATE_VERSION).digest("hex").slice(0, 12);
+}
+function buildCacheKey(fileHash, model, promptVersion) {
+  return createHash("sha256").update(fileHash + model + promptVersion).digest("hex").slice(0, 32);
+}
 async function extractFaceWithGemini(imageBuffer) {
   if (!process.env.GEMINI_API_KEY) return null;
   if (Date.now() < geminiFaceCooldownUntil) return null;
@@ -2354,7 +2363,7 @@ async function Doc2Fields(buffer, mimetype, model = "gemini", forcedDoctypeId) {
   }
   return { documents };
 }
-var pdfToPngModule, getPdfToPng, geminiClient3, getGemini3, geminiFaceCooldownUntil, ASPECT_RATIO_THRESHOLD, CEDULA_PHOTO_BBOX, toAiModel;
+var PROMPT_TEMPLATE_VERSION, pdfToPngModule, getPdfToPng, geminiClient3, getGemini3, geminiFaceCooldownUntil, ASPECT_RATIO_THRESHOLD, CEDULA_PHOTO_BBOX, toAiModel;
 var init_ocr = __esm({
   "src/ocr.ts"() {
     init_ai();
@@ -2362,6 +2371,7 @@ var init_ocr = __esm({
     init_config();
     init_facedetect();
     init_faceextract();
+    PROMPT_TEMPLATE_VERSION = "v1";
     pdfToPngModule = null;
     getPdfToPng = async () => {
       if (!pdfToPngModule) {
@@ -2652,6 +2662,6 @@ async function generateThumbnailFromPdf(buffer) {
   }
 }
 
-export { Doc2Fields, configure, detectAndSplitCompositeCedula, detectCedulaSide, extractPdfPageAsImage, generateThumbnailFromImage, generateThumbnailFromPdf, mergeCedulaFiles };
+export { Doc2Fields, buildCacheKey, configure, detectAndSplitCompositeCedula, detectCedulaSide, extractPdfPageAsImage, generateThumbnailFromImage, generateThumbnailFromPdf, getPromptVersion, mergeCedulaFiles };
 //# sourceMappingURL=index.mjs.map
 //# sourceMappingURL=index.mjs.map

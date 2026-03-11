@@ -29,6 +29,16 @@ declare function configure(options: {
  */
 
 /**
+ * Returns a short hash that changes when doctypes schema or prompt templates change.
+ * Used as part of the AI cache key.
+ */
+declare function getPromptVersion(): string;
+/**
+ * Build a cache key from the three inputs that determine AI output:
+ * file content (hash), model, and prompt version.
+ */
+declare function buildCacheKey(fileHash: string, model: string, promptVersion: string): string;
+/**
  * Extract a specific page from a PDF as a PNG image buffer
  */
 declare function extractPdfPageAsImage(pdfBuffer: Buffer, pageNumber: number): Promise<Buffer | null>;
@@ -74,4 +84,4 @@ declare function generateThumbnailFromImage(buffer: Buffer): Promise<Buffer | nu
 /** Render first page of a PDF to a small JPEG thumbnail. Returns null on failure. */
 declare function generateThumbnailFromPdf(buffer: Buffer): Promise<Buffer | null>;
 
-export { CedulaFile, CompositeCedulaResult, Doc2Fields, type DocProcessorLogger, ExtractionResult, MergedCedula, ModelArg, configure, detectAndSplitCompositeCedula, detectCedulaSide, extractPdfPageAsImage, generateThumbnailFromImage, generateThumbnailFromPdf, mergeCedulaFiles };
+export { CedulaFile, CompositeCedulaResult, Doc2Fields, type DocProcessorLogger, ExtractionResult, MergedCedula, ModelArg, buildCacheKey, configure, detectAndSplitCompositeCedula, detectCedulaSide, extractPdfPageAsImage, generateThumbnailFromImage, generateThumbnailFromPdf, getPromptVersion, mergeCedulaFiles };

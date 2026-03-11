@@ -3,6 +3,7 @@
 var smartcrop = require('smartcrop-sharp');
 var sharp3 = require('sharp');
 var pdfLib = require('pdf-lib');
+var crypto = require('crypto');
 
 function _interopDefault (e) { return e && e.__esModule ? e : { default: e }; }
 
@@ -1686,11 +1687,19 @@ var init_faceextract = __esm({
 var ocr_exports = {};
 __export(ocr_exports, {
   Doc2Fields: () => Doc2Fields,
+  buildCacheKey: () => buildCacheKey,
   detectCedulaSide: () => detectCedulaSide,
   extractPdfPageAsImage: () => extractPdfPageAsImage,
+  getPromptVersion: () => getPromptVersion,
   normalizeDoc: () => normalizeDoc,
   parseRawDocs: () => parseRawDocs
 });
+function getPromptVersion() {
+  return crypto.createHash("sha256").update(JSON.stringify(getDoctypes())).update(PROMPT_TEMPLATE_VERSION).digest("hex").slice(0, 12);
+}
+function buildCacheKey(fileHash, model, promptVersion) {
+  return crypto.createHash("sha256").update(fileHash + model + promptVersion).digest("hex").slice(0, 32);
+}
 async function extractFaceWithGemini(imageBuffer) {
   if (!process.env.GEMINI_API_KEY) return null;
   if (Date.now() < geminiFaceCooldownUntil) return null;
@@ -2361,7 +2370,7 @@ async function Doc2Fields(buffer, mimetype, model = "gemini", forcedDoctypeId) {
   }
   return { documents };
 }
-var pdfToPngModule, getPdfToPng, geminiClient3, getGemini3, geminiFaceCooldownUntil, ASPECT_RATIO_THRESHOLD, CEDULA_PHOTO_BBOX, toAiModel;
+var PROMPT_TEMPLATE_VERSION, pdfToPngModule, getPdfToPng, geminiClient3, getGemini3, geminiFaceCooldownUntil, ASPECT_RATIO_THRESHOLD, CEDULA_PHOTO_BBOX, toAiModel;
 var init_ocr = __esm({
   "src/ocr.ts"() {
     init_ai();
@@ -2369,6 +2378,7 @@ var init_ocr = __esm({
     init_config();
     init_facedetect();
     init_faceextract();
+    PROMPT_TEMPLATE_VERSION = "v1";
     pdfToPngModule = null;
     getPdfToPng = async () => {
       if (!pdfToPngModule) {
@@ -2660,12 +2670,14 @@ async function generateThumbnailFromPdf(buffer) {
 }
 
 exports.Doc2Fields = Doc2Fields;
+exports.buildCacheKey = buildCacheKey;
 exports.configure = configure;
 exports.detectAndSplitCompositeCedula = detectAndSplitCompositeCedula;
 exports.detectCedulaSide = detectCedulaSide;
 exports.extractPdfPageAsImage = extractPdfPageAsImage;
 exports.generateThumbnailFromImage = generateThumbnailFromImage;
 exports.generateThumbnailFromPdf = generateThumbnailFromPdf;
+exports.getPromptVersion = getPromptVersion;
 exports.mergeCedulaFiles = mergeCedulaFiles;
 //# sourceMappingURL=index.js.map
 //# sourceMappingURL=index.js.map
