@@ -106,12 +106,24 @@ export async function extractFace(
   faces.sort((a, b) => b.area - a.area)
   const best = faces[0]
 
-  // Step 3: Crop with padding for natural avatar framing
-  const PAD = 20
-  const px = Math.max(0, best.bbox.x - PAD)
-  const py = Math.max(0, best.bbox.y - PAD)
-  const pw = Math.min(best.bbox.width + PAD * 2, 100 - px)
-  const ph = Math.min(best.bbox.height + PAD * 2, 100 - py)
+  // Step 3: Crop with generous padding for portrait-style avatar framing
+  // PAD is % of image dimensions added around the face bounding box
+  const PAD = 30
+  let px = Math.max(0, best.bbox.x - PAD)
+  let py = Math.max(0, best.bbox.y - PAD)
+  let pw = Math.min(best.bbox.width + PAD * 2, 100 - px)
+  let ph = Math.min(best.bbox.height + PAD * 2, 100 - py)
+
+  // Make the crop region square (prevents fit:'cover' from cropping the padding)
+  if (pw > ph) {
+    const diff = pw - ph
+    py = Math.max(0, py - diff / 2)
+    ph = Math.min(pw, 100 - py)
+  } else if (ph > pw) {
+    const diff = ph - pw
+    px = Math.max(0, px - diff / 2)
+    pw = Math.min(ph, 100 - px)
+  }
 
   const left = Math.max(0, Math.round((px / 100) * imgW))
   const top = Math.max(0, Math.round((py / 100) * imgH))
