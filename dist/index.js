@@ -1522,7 +1522,7 @@ async function extractFace(imageBuffer, _mimetype, _model, opts) {
   }
   faces.sort((a, b) => b.area - a.area);
   const best = faces[0];
-  const PAD = 5;
+  const PAD = 20;
   const px = Math.max(0, best.bbox.x - PAD);
   const py = Math.max(0, best.bbox.y - PAD);
   const pw = Math.min(best.bbox.width + PAD * 2, 100 - px);
