@@ -106,38 +106,34 @@ export async function extractFace(
   faces.sort((a, b) => b.area - a.area)
   const best = faces[0]
 
-  // Step 3: Crop with generous padding for portrait-style avatar framing
-  // PAD is % of image dimensions added around the face bounding box
-  const PAD = 8
-  let px = Math.max(0, best.bbox.x - PAD)
-  let py = Math.max(0, best.bbox.y - PAD)
-  let pw = Math.min(best.bbox.width + PAD * 2, 100 - px)
-  let ph = Math.min(best.bbox.height + PAD * 2, 100 - py)
+  // Step 3: Square avatar crop centered on the face (full head: hair to chin)
+  // bbox is in % of image dimensions. Convert face center to pixels.
+  const faceCX = Math.round(((best.bbox.x + best.bbox.width / 2) / 100) * imgW)
+  const faceCY = Math.round(((best.bbox.y + best.bbox.height / 2) / 100) * imgH)
+  const faceH = Math.round((best.bbox.height / 100) * imgH)
 
-  // Make the crop region square (prevents fit:'cover' from cropping the padding)
-  if (pw > ph) {
-    const diff = pw - ph
-    py = Math.max(0, py - diff / 2)
-    ph = Math.min(pw, 100 - py)
-  } else if (ph > pw) {
-    const diff = ph - pw
-    px = Math.max(0, px - diff / 2)
-    pw = Math.min(ph, 100 - px)
-  }
+  // Square side in pixels: face height * 1.3 for hair + chin room
+  const side = Math.min(Math.round(faceH * 1.3), imgW, imgH)
 
-  const left = Math.max(0, Math.round((px / 100) * imgW))
-  const top = Math.max(0, Math.round((py / 100) * imgH))
-  const width = Math.min(Math.round((pw / 100) * imgW), imgW - left)
-  const height = Math.min(Math.round((ph / 100) * imgH), imgH - top)
+  // Desired crop position: centered on face, shifted up 8% for hair
+  const dLeft = faceCX - Math.floor(side / 2)
+  const dTop = faceCY - Math.floor(side * 0.55)
 
-  if (width <= 10 || height <= 10) return null
+  // Extend image if crop goes beyond edges (keeps face centered)
+  const extL = Math.max(0, -dLeft)
+  const extT = Math.max(0, -dTop)
+  const extR = Math.max(0, dLeft + side - imgW)
+  const extB = Math.max(0, dTop + side - imgH)
 
-  // Step 4: Crop and resize to 256×256 avatar
+  if (side <= 10) return null
+
+  // Step 4: Extend → extract → resize to 256×256
   let face: string
   try {
     const photo = await sharp(imageBuffer)
-      .extract({ left, top, width, height })
-      .resize(256, 256, { fit: 'cover' })
+      .extend({ top: extT, bottom: extB, left: extL, right: extR, background: '#FFFFFF' })
+      .extract({ left: dLeft + extL, top: dTop + extT, width: side, height: side })
+      .resize(256, 256)
       .jpeg({ quality: 92 })
       .toBuffer()
 

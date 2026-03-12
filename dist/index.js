@@ -1508,12 +1508,12 @@ async function extractFace(imageBuffer, _mimetype, _model, opts) {
       const bb = d.BoundingBox;
       const x = (bb.Left || 0) * 100;
       const y = (bb.Top || 0) * 100;
-      const width2 = (bb.Width || 0) * 100;
-      const height2 = (bb.Height || 0) * 100;
+      const width = (bb.Width || 0) * 100;
+      const height = (bb.Height || 0) * 100;
       return {
-        bbox: { x, y, width: width2, height: height2 },
+        bbox: { x, y, width, height },
         confidence: d.Confidence || 0,
-        area: width2 * height2
+        area: width * height
       };
     });
   } catch (err) {
@@ -1522,28 +1522,20 @@ async function extractFace(imageBuffer, _mimetype, _model, opts) {
   }
   faces.sort((a, b) => b.area - a.area);
   const best = faces[0];
-  const PAD = 8;
-  let px = Math.max(0, best.bbox.x - PAD);
-  let py = Math.max(0, best.bbox.y - PAD);
-  let pw = Math.min(best.bbox.width + PAD * 2, 100 - px);
-  let ph = Math.min(best.bbox.height + PAD * 2, 100 - py);
-  if (pw > ph) {
-    const diff = pw - ph;
-    py = Math.max(0, py - diff / 2);
-    ph = Math.min(pw, 100 - py);
-  } else if (ph > pw) {
-    const diff = ph - pw;
-    px = Math.max(0, px - diff / 2);
-    pw = Math.min(ph, 100 - px);
-  }
-  const left = Math.max(0, Math.round(px / 100 * imgW));
-  const top = Math.max(0, Math.round(py / 100 * imgH));
-  const width = Math.min(Math.round(pw / 100 * imgW), imgW - left);
-  const height = Math.min(Math.round(ph / 100 * imgH), imgH - top);
-  if (width <= 10 || height <= 10) return null;
+  const faceCX = Math.round((best.bbox.x + best.bbox.width / 2) / 100 * imgW);
+  const faceCY = Math.round((best.bbox.y + best.bbox.height / 2) / 100 * imgH);
+  const faceH = Math.round(best.bbox.height / 100 * imgH);
+  const side = Math.min(Math.round(faceH * 1.3), imgW, imgH);
+  const dLeft = faceCX - Math.floor(side / 2);
+  const dTop = faceCY - Math.floor(side * 0.55);
+  const extL = Math.max(0, -dLeft);
+  const extT = Math.max(0, -dTop);
+  const extR = Math.max(0, dLeft + side - imgW);
+  const extB = Math.max(0, dTop + side - imgH);
+  if (side <= 10) return null;
   let face;
   try {
-    const photo = await sharp2__default.default(imageBuffer).extract({ left, top, width, height }).resize(256, 256, { fit: "cover" }).jpeg({ quality: 92 }).toBuffer();
+    const photo = await sharp2__default.default(imageBuffer).extend({ top: extT, bottom: extB, left: extL, right: extR, background: "#FFFFFF" }).extract({ left: dLeft + extL, top: dTop + extT, width: side, height: side }).resize(256, 256).jpeg({ quality: 92 }).toBuffer();
     if (photo.length < 5e3) return null;
     face = photo.toString("base64");
   } catch (err) {

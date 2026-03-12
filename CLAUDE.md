@@ -53,6 +53,23 @@ src/
 - `npm run test:watch` — Watch mode
 - `npm run cli -- <file>` — Test extraction on a file
 
+## Testing Individual Files
+
+API keys live in Jogi's `.env.local`. Source them before running:
+
+```bash
+# Basic field extraction (any document)
+source /Users/avd/GitHub/jogi/.env.local && npx tsx dev/cli.ts <file> [model]
+
+# Full cedula pipeline (composite split + fields + face extraction)
+source /Users/avd/GitHub/jogi/.env.local && npx tsx dev/test-cedula.ts <cedula-image> [model]
+```
+
+- `model` defaults to `gemini`. Options: `gemini`, `claude`, `gpt5`
+- `dev/cli.ts` — runs `Doc2Fields` and prints JSON
+- `dev/test-cedula.ts` — runs V3 composite split, field extraction per side, face extraction via Rekognition. Saves cropped front/back images, face avatar, and fields JSON to `~/Desktop/tmp_cedula/`
+- AWS credentials for Rekognition are in `~/.aws/credentials` (default profile)
+
 ## Validation
 
 Use `npx tsc --noEmit` for type checking. Run `npm test` before committing.
