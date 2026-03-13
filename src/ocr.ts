@@ -250,7 +250,9 @@ export function normalizeDoc(d: any) {
     const META_KEYS = new Set(['id', 'doctypeid', 'doc_type_id', 'data', 'docdate', 'document_date', 'documentDate', 'start', 'end', 'partId', 'part_id', 'partid', 'label'])
     const flatData = Object.fromEntries(Object.entries(d || {}).filter(([k]) => !META_KEYS.has(k)))
     const data = d?.data && typeof d.data === 'object' ? d.data : Object.keys(flatData).length > 0 ? flatData : {}
-    const docdate = d?.docdate || d?.document_date || d?.documentDate || null
+    const rawDate = d?.docdate || d?.document_date || d?.documentDate || null
+    // Validate YYYY-MM-DD format — AI sometimes returns DD/MM/YYYY or free text
+    const docdate = rawDate && /^\d{4}-\d{2}-\d{2}$/.test(rawDate) && !isNaN(new Date(`${rawDate}T12:00:00`).getTime()) ? rawDate : null
     const start = Number.isFinite(d?.start) ? Number(d.start) : (d?.start ? parseInt(d.start, 10) : undefined)
     const end = Number.isFinite(d?.end) ? Number(d.end) : (d?.end ? parseInt(d.end, 10) : undefined)
     const partId = d?.partId || d?.part_id || d?.partid || undefined
