@@ -1,5 +1,5 @@
 // Server-only entry point — contains heavy deps (sharp, AI SDKs, pdf-lib)
-// For doctype utilities without heavy deps, use @avd/docprocessor/doctypes
+// For doctype utilities without heavy deps, use @jogi/docprocessor/doctypes
 
 export { configure } from './config'
 export type { DocProcessorLogger } from './config'

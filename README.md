@@ -1,4 +1,4 @@
-# @avd/docprocessor
+# @jogi/docprocessor
 
 Chilean document processing module — classification, field extraction, face detection, and image utilities.
 
@@ -59,9 +59,9 @@ The `skipFace` option prevents Doc2Fields from running its own face extraction, 
 
 | Import | Use case | Heavy deps? |
 |--------|----------|-------------|
-| `@avd/docprocessor` | Server-only: AI extraction, cedula, thumbnails | Yes (sharp, AI SDKs, pdf-lib) |
-| `@avd/docprocessor/doctypes` | Universal: doctype queries, types | No |
-| `@avd/docprocessor/multipart` | Universal: multi-part file utilities | No |
+| `@jogi/docprocessor` | Server-only: AI extraction, cedula, thumbnails | Yes (sharp, AI SDKs, pdf-lib) |
+| `@jogi/docprocessor/doctypes` | Universal: doctype queries, types | No |
+| `@jogi/docprocessor/multipart` | Universal: multi-part file utilities | No |
 
 ## Key Exports
 
